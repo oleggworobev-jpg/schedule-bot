@@ -19,7 +19,7 @@ def health():
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv('BOT_TOKEN') 
-MY_CHAT_ID = 123456789  # <--- СЮДА ВСТАВЬ СВОЙ РЕАЛЬНЫЙ ЧИСЛОВОЙ ID
+MY_CHAT_ID = 123456789  # <--- ОБЯЗАТЕЛЬНО ВСТАВЬ СВОЙ РЕАЛЬНЫЙ ЧИСЛОВОЙ ID
 TIMEZONE = 'Europe/Moscow' 
 tz = pytz.timezone(TIMEZONE) 
 STATE_FILE = 'state.json'
