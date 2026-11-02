@@ -11,10 +11,9 @@ import json
 
 # --- ВЕБ-СЕРВЕР ДЛЯ RENDER (чтобы не засыпал) ---
 app = Flask(__name__)
-
-@app.route('/')
-@app.route('/health')
-def health():
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def health(path):
     return "Bot is running", 200
 
 # --- НАСТРОЙКИ ---
