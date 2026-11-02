@@ -19,14 +19,16 @@ def health():
 
 # --- НАСТРОЙКИ ---
 TOKEN = os.getenv('BOT_TOKEN') 
-MY_CHAT_ID = 123456789  # <--- ОБЯЗАТЕЛЬНО ВСТАВЬ СВОЙ РЕАЛЬНЫЙ CHAT ID
+MY_CHAT_ID = 123456789  # <--- СЮДА ВСТАВЬ СВОЙ РЕАЛЬНЫЙ ЧИСЛОВОЙ ID
 TIMEZONE = 'Europe/Moscow' 
+tz = pytz.timezone(TIMEZONE) 
 STATE_FILE = 'state.json'
 
 bot = telebot.TeleBot(TOKEN)
 scheduler = BackgroundScheduler(timezone=TIMEZONE)
 
-ANCHOR_DATE = datetime(2026, 11, 2)
+# Используем локальное время для якоря
+ANCHOR_DATE = tz.localize(datetime(2026, 11, 2))
 DAYS_OF_WEEK = {0: "Понедельник", 1: "Вторник", 2: "Среда", 3: "Четверг", 4: "Пятница", 5: "Суббота", 6: "Воскресенье"}
 
 # --- РАБОТА С СОСТОЯНИЕМ ---
@@ -42,6 +44,8 @@ def save_state(state):
 
 # --- ЛОГИКА РАСПИСАНИЯ ---
 def get_week_number(target_date):
+    if target_date.tzinfo is None:
+        target_date = tz.localize(target_date)
     delta = target_date - ANCHOR_DATE
     return 1 if (delta.days // 7) % 2 == 0 else 2
 
@@ -84,7 +88,7 @@ def get_week_schedule_text(start_date):
 
 # --- ЛОГИКА ЖИВОЙ ПАНЕЛИ ---
 def generate_live_text():
-    now = datetime.now()
+    now = datetime.now(tz) 
     day_name = DAYS_OF_WEEK[now.weekday()]
     current_schedule = WEEK_1 if get_week_number(now) == 1 else WEEK_2
     lessons = current_schedule.get(day_name, [])
@@ -183,13 +187,13 @@ def get_back_keyboard():
 
 # --- АВТОМАТИЧЕСКИЕ УВЕДОМЛЕНИЯ ---
 def send_daily_reminder():
-    tomorrow = datetime.now() + timedelta(days=1)
+    tomorrow = datetime.now(tz) + timedelta(days=1) 
     text = "🔔 <b>Расписание на завтра:</b>\n\n" + get_day_schedule_text(tomorrow)
     try: bot.send_message(MY_CHAT_ID, text, parse_mode='HTML')
     except: pass
 
 def send_weekly_summary():
-    now = datetime.now()
+    now = datetime.now(tz) 
     days_until_monday = 7 - now.weekday() if now.weekday() != 0 else 7
     next_monday = now + timedelta(days=days_until_monday)
     text = "📅 <b>Планы на следующую неделю:</b>\n\n" + get_week_schedule_text(next_monday)
@@ -197,7 +201,7 @@ def send_weekly_summary():
     except: pass
 
 def check_upcoming_classes():
-    now = datetime.now()
+    now = datetime.now(tz) 
     day_name = DAYS_OF_WEEK[now.weekday()]
     current_schedule = WEEK_1 if get_week_number(now) == 1 else WEEK_2
     lessons = current_schedule.get(day_name, [])
@@ -234,7 +238,7 @@ def get_id(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
-    today = datetime.now()
+    today = datetime.now(tz)
     start_of_current_week = today - timedelta(days=today.weekday())
     state = load_state()
 
